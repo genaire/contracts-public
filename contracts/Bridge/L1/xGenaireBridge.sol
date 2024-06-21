@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "./xRenzoBridgeStorage.sol";
+import "./xGenaireBridgeStorage.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../../Errors/Errors.sol";
 import {
@@ -13,21 +13,21 @@ import "../xERC20/interfaces/IXERC20.sol";
 import { Client } from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract xRenzoBridge is
+contract xGenaireBridge is
     IXReceiver,
     Initializable,
     ReentrancyGuardUpgradeable,
-    xRenzoBridgeStorageV1
+    xGenaireBridgeStorageV1
 {
     using SafeERC20 for IERC20;
 
-    /// @dev Event emitted when bridge triggers ezETH mint
-    event EzETHMinted(
+    /// @dev Event emitted when bridge triggers airETH mint
+    event AirETHMinted(
         bytes32 transferId,
         uint256 amountDeposited,
         uint32 origin,
         address originSender,
-        uint256 ezETHMinted
+        uint256 airETHMinted
     );
 
     /// @dev Event emitted when a message is sent to another chain.
@@ -68,11 +68,11 @@ contract xRenzoBridge is
 
     /// @dev Initializes the contract with initial vars
     function initialize(
-        IERC20 _ezETH,
-        IERC20 _xezETH,
+        IERC20 _airETH,
+        IERC20 _xairETH,
         IRestakeManager _restakeManager,
         IERC20 _wETH,
-        IXERC20Lockbox _xezETHLockbox,
+        IXERC20Lockbox _xairETHLockbox,
         IConnext _connext,
         IRouterClient _linkRouterClient,
         IRateProvider _rateProvider,
@@ -81,11 +81,11 @@ contract xRenzoBridge is
     ) public initializer {
         // Verify non-zero addresses on inputs
         if (
-            address(_ezETH) == address(0) ||
-            address(_xezETH) == address(0) ||
+            address(_airETH) == address(0) ||
+            address(_xairETH) == address(0) ||
             address(_restakeManager) == address(0) ||
             address(_wETH) == address(0) ||
-            address(_xezETHLockbox) == address(0) ||
+            address(_xairETHLockbox) == address(0) ||
             address(_connext) == address(0) ||
             address(_linkRouterClient) == address(0) ||
             address(_rateProvider) == address(0) ||
@@ -96,11 +96,11 @@ contract xRenzoBridge is
         }
 
         // Verify all tokens have 18 decimals
-        uint8 decimals = IERC20MetadataUpgradeable(address(_ezETH)).decimals();
+        uint8 decimals = IERC20MetadataUpgradeable(address(_airETH)).decimals();
         if (decimals != EXPECTED_DECIMALS) {
             revert InvalidTokenDecimals(EXPECTED_DECIMALS, decimals);
         }
-        decimals = IERC20MetadataUpgradeable(address(_xezETH)).decimals();
+        decimals = IERC20MetadataUpgradeable(address(_xairETH)).decimals();
         if (decimals != EXPECTED_DECIMALS) {
             revert InvalidTokenDecimals(EXPECTED_DECIMALS, decimals);
         }
@@ -114,11 +114,11 @@ contract xRenzoBridge is
         }
 
         // Save off inputs
-        ezETH = _ezETH;
-        xezETH = _xezETH;
+        airETH = _airETH;
+        xairETH = _xairETH;
         restakeManager = _restakeManager;
         wETH = _wETH;
-        xezETHLockbox = _xezETHLockbox;
+        xairETHLockbox = _xairETHLockbox;
         connext = _connext;
         linkRouterClient = _linkRouterClient;
         rateProvider = _rateProvider;
@@ -128,9 +128,9 @@ contract xRenzoBridge is
 
     /**
      * @notice  Accepts collateral from the bridge
-     * @dev     This function will take all collateral and deposit it into Renzo
-     *          The ezETH from the deposit will be sent to the lockbox to be wrapped into xezETH
-     *          The xezETH will be burned so that the xezETH on the L2 can be unwrapped for ezETH later
+     * @dev     This function will take all collateral and deposit it into Genaire
+     *          The airETH from the deposit will be sent to the lockbox to be wrapped into xairETH
+     *          The xairETH will be burned so that the xairETH on the L2 can be unwrapped for airETH later
      * @notice  WARNING: This function does NOT whitelist who can send funds from the L2 via Connext.  Users should NOT
      *          send funds directly to this contract.  A user who sends funds directly to this contract will cause
      *          the tokens on the L2 to become over collateralized and will be a "donation" to protocol.  Only use
@@ -168,32 +168,32 @@ contract xRenzoBridge is
         // Get the amount of ETH
         uint256 ethAmount = address(this).balance - ethBalanceBeforeWithdraw;
 
-        // Get the amonut of ezETH before the deposit
-        uint256 ezETHBalanceBeforeDeposit = ezETH.balanceOf(address(this));
+        // Get the amonut of airETH before the deposit
+        uint256 airETHBalanceBeforeDeposit = airETH.balanceOf(address(this));
 
-        // Deposit it into Renzo RestakeManager
+        // Deposit it into Genaire RestakeManager
         restakeManager.depositETH{ value: ethAmount }();
 
-        // Get the amount of ezETH that was minted
-        uint256 ezETHAmount = ezETH.balanceOf(address(this)) - ezETHBalanceBeforeDeposit;
+        // Get the amount of airETH that was minted
+        uint256 airETHAmount = airETH.balanceOf(address(this)) - airETHBalanceBeforeDeposit;
 
-        // Approve the lockbox to spend the ezETH
-        ezETH.safeIncreaseAllowance(address(xezETHLockbox), ezETHAmount);
+        // Approve the lockbox to spend the airETH
+        airETH.safeIncreaseAllowance(address(xairETHLockbox), airETHAmount);
 
-        // Get the xezETH balance before the deposit
-        uint256 xezETHBalanceBeforeDeposit = xezETH.balanceOf(address(this));
+        // Get the xairETH balance before the deposit
+        uint256 xairETHBalanceBeforeDeposit = xairETH.balanceOf(address(this));
 
-        // Send to the lockbox to be wrapped into xezETH
-        xezETHLockbox.deposit(ezETHAmount);
+        // Send to the lockbox to be wrapped into xairETH
+        xairETHLockbox.deposit(airETHAmount);
 
-        // Get the amount of xezETH that was minted
-        uint256 xezETHAmount = xezETH.balanceOf(address(this)) - xezETHBalanceBeforeDeposit;
+        // Get the amount of xairETH that was minted
+        uint256 xairETHAmount = xairETH.balanceOf(address(this)) - xairETHBalanceBeforeDeposit;
 
         // Burn it - it was already minted on the L2
-        IXERC20(address(xezETH)).burn(address(this), xezETHAmount);
+        IXERC20(address(xairETH)).burn(address(this), xairETHAmount);
 
         // Emit the event
-        emit EzETHMinted(_transferId, _amount, _origin, _originSender, ezETHAmount);
+        emit AirETHMinted(_transferId, _amount, _origin, _originSender, airETHAmount);
 
         // Return 0 for success
         bytes memory returnData = new bytes(0);
@@ -202,7 +202,7 @@ contract xRenzoBridge is
 
     /**
      * @notice  Send the price feed to the L1
-     * @dev     Calls the getRate() function to get the current ezETH to ETH price and sends to the L2.
+     * @dev     Calls the getRate() function to get the current airETH to ETH price and sends to the L2.
      *          This should be a permissioned call for only PRICE_FEED_SENDER role
      * @param _destinationParam array of CCIP destination chain param
      * @param _connextDestinationParam array of connext destination chain param
@@ -211,18 +211,18 @@ contract xRenzoBridge is
         CCIPDestinationParam[] calldata _destinationParam,
         ConnextDestinationParam[] calldata _connextDestinationParam
     ) external payable onlyPriceFeedSender nonReentrant {
-        // call getRate() to get the current price of ezETH
+        // call getRate() to get the current price of airETH
         uint256 exchangeRate = rateProvider.getRate();
 
         // check revert if price fetched by rate provider is undercollateralized
         if (exchangeRate < 1 ether) revert InvalidOraclePrice();
 
         bytes memory _callData = abi.encode(exchangeRate, block.timestamp);
-        // send price feed to renzo CCIP receivers
+        // send price feed to genaire CCIP receivers
         for (uint256 i = 0; i < _destinationParam.length; ) {
             Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
-                receiver: abi.encode(_destinationParam[i]._renzoReceiver), // ABI-encoded xRenzoDepsot contract address
-                data: _callData, // ABI-encoded ezETH exchange rate with Timestamp
+                receiver: abi.encode(_destinationParam[i]._genaireReceiver), // ABI-encoded xGenaireDepsot contract address
+                data: _callData, // ABI-encoded airETH exchange rate with Timestamp
                 tokenAmounts: new Client.EVMTokenAmount[](0), // Empty array indicating no tokens are being sent
                 extraArgs: Client._argsToBytes(
                     // Additional arguments, setting gas limit
@@ -254,7 +254,7 @@ contract xRenzoBridge is
             emit MessageSent(
                 messageId,
                 _destinationParam[i].destinationChainSelector,
-                _destinationParam[i]._renzoReceiver,
+                _destinationParam[i]._genaireReceiver,
                 exchangeRate,
                 address(linkToken),
                 fees
@@ -264,11 +264,11 @@ contract xRenzoBridge is
             }
         }
 
-        // send price feed to renzo connext receiver
+        // send price feed to genaire connext receiver
         for (uint256 i = 0; i < _connextDestinationParam.length; ) {
             connext.xcall{ value: _connextDestinationParam[i].relayerFee }(
                 _connextDestinationParam[i].destinationDomainId,
-                _connextDestinationParam[i]._renzoReceiver,
+                _connextDestinationParam[i]._genaireReceiver,
                 address(0),
                 msg.sender,
                 0,
@@ -278,7 +278,7 @@ contract xRenzoBridge is
 
             emit ConnextMessageSent(
                 _connextDestinationParam[i].destinationDomainId,
-                _connextDestinationParam[i]._renzoReceiver,
+                _connextDestinationParam[i]._genaireReceiver,
                 exchangeRate,
                 _connextDestinationParam[i].relayerFee
             );
