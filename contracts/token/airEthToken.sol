@@ -3,17 +3,17 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./IEzEthToken.sol";
+import "./IAirEthToken.sol";
 import "../Permissions/IRoleManager.sol";
-import "./EzEthTokenStorage.sol";
+import "./AirEthTokenStorage.sol";
 import "../Errors/Errors.sol";
 
-/// @dev This contract is the ezETH ERC20 token
-/// Ownership of the collateral in the protocol is tracked by the ezETH token
-contract EzEthToken is Initializable, ERC20Upgradeable, IEzEthToken, EzEthTokenStorageV1 {
-    /// @dev Allows only a whitelisted address to mint or burn ezETH tokens
+/// @dev This contract is the AirETH ERC20 token
+/// Ownership of the collateral in the protocol is tracked by the AirETH token
+contract AirEthToken is Initializable, ERC20Upgradeable, IAirEthToken, AirEthTokenStorageV1 {
+    /// @dev Allows only a whitelisted address to mint or burn AirETH tokens
     modifier onlyMinterBurner() {
-        if (!roleManager.isEzETHMinterBurner(msg.sender)) revert NotEzETHMinterBurner();
+        if (!roleManager.isAirETHMinterBurner(msg.sender)) revert NotAirETHMinterBurner();
         _;
     }
 
@@ -33,16 +33,16 @@ contract EzEthToken is Initializable, ERC20Upgradeable, IEzEthToken, EzEthTokenS
     function initialize(IRoleManager _roleManager) public initializer {
         if (address(_roleManager) == address(0x0)) revert InvalidZeroInput();
 
-        __ERC20_init("ezETH", "Renzo Restaked ETH");
+        __ERC20_init("AirETH", "Renzo Restaked ETH");
         roleManager = _roleManager;
     }
 
-    /// @dev Allows minter/burner to mint new ezETH tokens to an address
+    /// @dev Allows minter/burner to mint new AirETH tokens to an address
     function mint(address to, uint256 amount) external onlyMinterBurner {
         _mint(to, amount);
     }
 
-    /// @dev Allows minter/burner to burn ezETH tokens from an address
+    /// @dev Allows minter/burner to burn AirETH tokens from an address
     function burn(address from, uint256 amount) external onlyMinterBurner {
         _burn(from, amount);
     }
@@ -59,6 +59,6 @@ contract EzEthToken is Initializable, ERC20Upgradeable, IEzEthToken, EzEthTokenS
      * name.
      */
     function symbol() public view virtual override returns (string memory) {
-        return "ezETH";
+        return "AirETH";
     }
 }
