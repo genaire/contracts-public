@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "./IxRenzoBridge.sol";
+import "./IxGenaireBridge.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../../IRestakeManager.sol";
 import "../xERC20/interfaces/IXERC20Lockbox.sol";
@@ -15,12 +15,12 @@ import {
 } from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import { IRoleManager } from "../../Permissions/IRoleManager.sol";
 
-abstract contract xRenzoBridgeStorageV1 is IxRenzoBridge {
-    /// @notice The xezETH token address
-    IERC20 public xezETH;
+abstract contract xGenaireBridgeStorageV1 is IxGenaireBridge {
+    /// @notice The xairETH token address
+    IERC20 public xairETH;
 
-    /// @notice The ezETH token address
-    IERC20 public ezETH;
+    /// @notice The airETH token address
+    IERC20 public airETH;
 
     /// @notice The RestakeManager contract - deposits into the protocol are restaked here
     IRestakeManager public restakeManager;
@@ -28,8 +28,8 @@ abstract contract xRenzoBridgeStorageV1 is IxRenzoBridge {
     /// @notice The wETH token address - will be sent via bridge from L2
     IERC20 public wETH;
 
-    /// @notice The lockbox contract for ezETH - minted ezETH is sent here
-    IXERC20Lockbox public xezETHLockbox;
+    /// @notice The lockbox contract for airETH - minted airETH is sent here
+    IXERC20Lockbox public xairETHLockbox;
 
     /// @notice The address of the main Connext contract
     IConnext public connext;
@@ -43,6 +43,6 @@ abstract contract xRenzoBridgeStorageV1 is IxRenzoBridge {
     /// @notice The address of Chainlink Token
     LinkTokenInterface public linkToken;
 
-    /// @notice The address of Renzo RoleManager contract
+    /// @notice The address of Genaire RoleManager contract
     IRoleManager public roleManager;
 }
