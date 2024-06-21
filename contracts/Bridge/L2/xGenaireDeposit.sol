@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "./xRenzoDepositStorage.sol";
+import "./xGenaireDepositStorage.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {
     OwnableUpgradeable
@@ -16,20 +16,20 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../../RateProvider/IRateProvider.sol";
 
 /**
- * @author  Renzo
- * @title   xRenzoDeposit Contract
- * @dev     Tokens are sent to this contract via deposit, xezETH is minted for the user,
- *          and funds are batched and bridged down to the L1 for depositing into the Renzo Protocol.
- *          Any ezETH minted on the L1 will be locked in the lockbox for unwrapping at a later time with xezETH.
- * @notice  Allows L2 minting of xezETH tokens in exchange for deposited assets
+ * @author  Genaire
+ * @title   xGenaireDeposit Contract
+ * @dev     Tokens are sent to this contract via deposit, xETH is minted for the user,
+ *          and funds are batched and bridged down to the L1 for depositing into the Genaire Protocol.
+ *          Any ETH minted on the L1 will be locked in the lockbox for unwrapping at a later time with xETH.
+ * @notice  Allows L2 minting of xETH tokens in exchange for deposited assets
  */
 
-contract xRenzoDeposit is
+contract xGenaireDeposit is
     Initializable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
     IRateProvider,
-    xRenzoDepositStorageV3
+    xGenaireDepositStorageV3
 {
     using SafeERC20 for IERC20;
 
@@ -63,18 +63,18 @@ contract xRenzoDeposit is
     /**
      * @notice  Initializes the contract with initial vars
      * @dev     All tokens are expected to have 18 decimals
-     * @param   _currentPrice  Initializes it with an initial price of ezETH to ETH
-     * @param   _xezETH  L2 ezETH token
+     * @param   _currentPrice  Initializes it with an initial price of ETH to ETH
+     * @param   _xETH  L2 ETH token
      * @param   _depositToken  WETH on L2
      * @param   _collateralToken  nextWETH on L2
      * @param   _connext  Connext contract
      * @param   _swapKey  Swap key for the connext contract swap from WETH to nextWETH
-     * @param   _receiver Renzo Receiver middleware contract for price feed
-     * @param   _oracle Price feed oracle for ezETH
+     * @param   _receiver Genaire Receiver middleware contract for price feed
+     * @param   _oracle Price feed oracle for ETH
      */
     function initialize(
         uint256 _currentPrice,
-        IERC20 _xezETH,
+        IERC20 _xETH,
         IERC20 _depositToken,
         IERC20 _collateralToken,
         IConnext _connext,
@@ -82,7 +82,7 @@ contract xRenzoDeposit is
         address _receiver,
         uint32 _bridgeDestinationDomain,
         address _bridgeTargetAddress,
-        IRenzoOracleL2 _oracle
+        IGenaireOracleL2 _oracle
     ) public initializer {
         // Initialize inherited classes
         __Ownable_init();
@@ -90,7 +90,7 @@ contract xRenzoDeposit is
         // Verify valid non zero values
         if (
             _currentPrice == 0 ||
-            address(_xezETH) == address(0) ||
+            address(_xETH) == address(0) ||
             address(_depositToken) == address(0) ||
             address(_collateralToken) == address(0) ||
             address(_connext) == address(0) ||
@@ -110,7 +110,7 @@ contract xRenzoDeposit is
         if (decimals != EXPECTED_DECIMALS) {
             revert InvalidTokenDecimals(EXPECTED_DECIMALS, decimals);
         }
-        decimals = IERC20MetadataUpgradeable(address(_xezETH)).decimals();
+        decimals = IERC20MetadataUpgradeable(address(_xETH)).decimals();
         if (decimals != EXPECTED_DECIMALS) {
             revert InvalidTokenDecimals(EXPECTED_DECIMALS, decimals);
         }
@@ -119,8 +119,8 @@ contract xRenzoDeposit is
         lastPrice = _currentPrice;
         lastPriceTimestamp = block.timestamp;
 
-        // Set xezETH address
-        xezETH = _xezETH;
+        // Set xETH address
+        xETH = _xETH;
 
         // Set the depoist token
         depositToken = _depositToken;
@@ -156,14 +156,14 @@ contract xRenzoDeposit is
     }
 
     /**
-     * @notice  Accepts deposit for the user in the native asset and mints xezETH
-     * @dev     This funcion allows anyone to call and deposit the native asset for xezETH
+     * @notice  Accepts deposit for the user in the native asset and mints xETH
+     * @dev     This funcion allows anyone to call and deposit the native asset for xETH
      *          The native asset will be wrapped to WETH (if it is supported)
-     *          ezETH will be immediately minted based on the current price
+     *          ETH will be immediately minted based on the current price
      *          Funds will be held until sweep() is called.
-     * @param   _minOut  Minimum number of xezETH to accept to ensure slippage minimums
+     * @param   _minOut  Minimum number of xETH to accept to ensure slippage minimums
      * @param   _deadline  latest timestamp to accept this transaction
-     * @return  uint256  Amount of xezETH minted to calling account
+     * @return  uint256  Amount of xETH minted to calling account
      */
     function depositETH(
         uint256 _minOut,
@@ -191,15 +191,15 @@ contract xRenzoDeposit is
     }
 
     /**
-     * @notice  Accepts deposit for the user in depositToken and mints xezETH
-     * @dev     This funcion allows anyone to call and deposit collateral for xezETH
-     *          ezETH will be immediately minted based on the current price
+     * @notice  Accepts deposit for the user in depositToken and mints xETH
+     * @dev     This funcion allows anyone to call and deposit collateral for xETH
+     *          ETH will be immediately minted based on the current price
      *          Funds will be held until sweep() is called.
      *          User calling this function should first approve the tokens to be pulled via transferFrom
      * @param   _amountIn  Amount of tokens to deposit
-     * @param   _minOut  Minimum number of xezETH to accept to ensure slippage minimums
+     * @param   _minOut  Minimum number of xETH to accept to ensure slippage minimums
      * @param   _deadline  latest timestamp to accept this transaction
-     * @return  uint256  Amount of xezETH minted to calling account
+     * @return  uint256  Amount of xETH minted to calling account
      */
     function deposit(
         uint256 _amountIn,
@@ -217,12 +217,12 @@ contract xRenzoDeposit is
     }
 
     /**
-     * @notice  Internal function to trade deposit tokens for nextWETH and mint xezETH
+     * @notice  Internal function to trade deposit tokens for nextWETH and mint xETH
      * @dev     Deposit Tokens should be available in the contract before calling this function
      * @param   _amountIn  Amount of tokens deposited
-     * @param   _minOut  Minimum number of xezETH to accept to ensure slippage minimums
+     * @param   _minOut  Minimum number of xETH to accept to ensure slippage minimums
      * @param   _deadline  latest timestamp to accept this transaction
-     * @return  uint256  Amount of xezETH minted to calling account
+     * @return  uint256  Amount of xETH minted to calling account
      */
     function _deposit(
         uint256 _amountIn,
@@ -241,7 +241,7 @@ contract xRenzoDeposit is
             revert InvalidZeroOutput();
         }
 
-        // Fetch price and timestamp of ezETH from the configured price feed
+        // Fetch price and timestamp of ETH from the configured price feed
         (uint256 _lastPrice, uint256 _lastPriceTimestamp) = getMintRate();
 
         // Verify the price is not stale
@@ -249,11 +249,11 @@ contract xRenzoDeposit is
             revert OraclePriceExpired();
         }
 
-        // Calculate the amount of xezETH to mint - assumes 18 decimals for price and token
-        uint256 xezETHAmount = (1e18 * amountOut) / _lastPrice;
+        // Calculate the amount of xETH to mint - assumes 18 decimals for price and token
+        uint256 xETHAmount = (1e18 * amountOut) / _lastPrice;
 
-        // Check that the user will get the minimum amount of xezETH
-        if (xezETHAmount < _minOut) {
+        // Check that the user will get the minimum amount of xETH
+        if (xETHAmount < _minOut) {
             revert InsufficientOutputAmount();
         }
 
@@ -262,12 +262,12 @@ contract xRenzoDeposit is
             revert InvalidTimestamp(_deadline);
         }
 
-        // Mint xezETH to the user
-        IXERC20(address(xezETH)).mint(msg.sender, xezETHAmount);
+        // Mint xETH to the user
+        IXERC20(address(xETH)).mint(msg.sender, xETHAmount);
 
         // Emit the event and return amount minted
-        emit Deposit(msg.sender, _amountIn, xezETHAmount);
-        return xezETHAmount;
+        emit Deposit(msg.sender, _amountIn, xETHAmount);
+        return xETHAmount;
     }
 
     /**
@@ -284,7 +284,7 @@ contract xRenzoDeposit is
     }
 
     /**
-     * @notice Fetch the price of ezETH from configured price feeds
+     * @notice Fetch the price of ETH from configured price feeds
      */
     function getMintRate() public view returns (uint256, uint256) {
         // revert if PriceFeedNotAvailable
@@ -304,7 +304,7 @@ contract xRenzoDeposit is
      * @notice  Updates the price feed
      * @dev     This function will receive the price feed and timestamp from the L1 through CCIPReceiver middleware contract.
      *          It should verify the origin of the call and only allow permissioned source to call.
-     * @param   _price The price of ezETH sent via L1.
+     * @param   _price The price of ETH sent via L1.
      * @param   _timestamp The timestamp at which L1 sent the price.
      */
     function updatePrice(uint256 _price, uint256 _timestamp) external override {
@@ -315,7 +315,7 @@ contract xRenzoDeposit is
     /**
      * @notice  Updates the price feed from the Owner account
      * @dev     Sets the last price and timestamp
-     * @param   price  price of ezETH to ETH - 18 decimal precision
+     * @param   price  price of ETH to ETH - 18 decimal precision
      */
     function updatePriceByOwner(uint256 price) external onlyOwner {
         return _updatePrice(price, block.timestamp);
@@ -324,7 +324,7 @@ contract xRenzoDeposit is
     /**
      * @notice  Internal function to update price
      * @dev     Sanity checks input values and updates prices
-     * @param   _price  Current price of ezETH to ETH - 18 decimal precision
+     * @param   _price  Current price of ETH to ETH - 18 decimal precision
      * @param   _timestamp  The timestamp of the price update
      */
     function _updatePrice(uint256 _price, uint256 _timestamp) internal {
@@ -369,7 +369,7 @@ contract xRenzoDeposit is
 
     /**
      * @notice  Trades deposit asset for nextWETH
-     * @dev     Note that min out is not enforced here since the asset will be priced to ezETH by the calling function
+     * @dev     Note that min out is not enforced here since the asset will be priced to ETH by the calling function
      * @param   _amountIn  Amount of deposit tokens to trade for collateral asset
      * @return  _deadline Deadline for the trade to prevent stale requests
      */
@@ -426,7 +426,7 @@ contract xRenzoDeposit is
 
     /**
      * @notice  This function will take the balance of nextWETH in the contract and bridge it down to the L1
-     * @dev     The L1 contract will unwrap, deposit in Renzo, and lock up the ezETH in the lockbox on L1
+     * @dev     The L1 contract will unwrap, deposit in Genaire, and lock up the ETH in the lockbox on L1
      *          This function should only be callable by permissioned accounts
      *          The caller will estimate and pay the gas for the bridge call
      */
@@ -469,7 +469,7 @@ contract xRenzoDeposit is
 
     /**
      * @notice  Exposes the price via getRate()
-     * @dev     This is required for a balancer pool to get the price of ezETH
+     * @dev     This is required for a balancer pool to get the price of ETH
      * @return  uint256  .
      */
     function getRate() external view override returns (uint256) {
@@ -517,17 +517,17 @@ contract xRenzoDeposit is
      *  Admin/OnlyOwner functions
      *****************************/
     /**
-     * @notice This function sets/updates the Oracle price Feed middleware for ezETH
+     * @notice This function sets/updates the Oracle price Feed middleware for ETH
      * @dev This should be permissioned call (onlyOwner), can be set to address(0) for not configured
      * @param _oracle Oracle address
      */
-    function setOraclePriceFeed(IRenzoOracleL2 _oracle) external onlyOwner {
+    function setOraclePriceFeed(IGenaireOracleL2 _oracle) external onlyOwner {
         emit OraclePriceFeedUpdated(address(_oracle), address(oracle));
         oracle = _oracle;
     }
 
     /**
-     * @notice This function sets/updates the Receiver Price Feed Middleware for ezETH
+     * @notice This function sets/updates the Receiver Price Feed Middleware for ETH
      * @dev This should be permissioned call (onlyOnwer), can be set to address(0) for not configured
      * @param _receiver Receiver address
      */
