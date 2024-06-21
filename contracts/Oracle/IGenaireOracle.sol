@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IRenzoOracle {
+interface IGenaireOracle {
     function lookupTokenValue(IERC20 _token, uint256 _balance) external view returns (uint256);
     function lookupTokenAmountFromValue(
         IERC20 _token,
@@ -16,11 +16,11 @@ interface IRenzoOracle {
     function calculateMintAmount(
         uint256 _currentValueInProtocol,
         uint256 _newValueAdded,
-        uint256 _existingEzETHSupply
+        uint256 _existingAirETHSupply
     ) external pure returns (uint256);
     function calculateRedeemAmount(
-        uint256 _ezETHBeingBurned,
-        uint256 _existingEzETHSupply,
+        uint256 _airETHBeingBurned,
+        uint256 _existingAirETHSupply,
         uint256 _currentValueInProtocol
     ) external pure returns (uint256);
 }
