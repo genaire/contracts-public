@@ -16,22 +16,22 @@ contract BalancerRateProvider is Initializable, IRateProvider, BalancerRateProvi
     /// @dev Initializes the contract with initial vars
     function initialize(
         IRestakeManager _restakeManager,
-        IERC20Upgradeable _ezETHToken
+        IERC20Upgradeable _airETHToken
     ) public initializer {
         if (address(_restakeManager) == address(0x0)) revert InvalidZeroInput();
-        if (address(_ezETHToken) == address(0x0)) revert InvalidZeroInput();
+        if (address(_airETHToken) == address(0x0)) revert InvalidZeroInput();
 
         restakeManager = _restakeManager;
-        ezETHToken = _ezETHToken;
+        airETHToken = _airETHToken;
     }
 
-    /// @dev Returns the current rate of ezETH in ETH
+    /// @dev Returns the current rate of airETH in ETH
     function getRate() external view returns (uint256) {
         // Get the total TVL priced in ETH from restakeManager
         (, , uint256 totalTVL) = restakeManager.calculateTVLs();
 
-        // Get the total supply of the ezETH token
-        uint256 totalSupply = ezETHToken.totalSupply();
+        // Get the total supply of the airETH token
+        uint256 totalSupply = airETHToken.totalSupply();
 
         // Sanity check
         if (totalSupply == 0 || totalTVL == 0) revert InvalidZeroInput();
