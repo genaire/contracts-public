@@ -615,7 +615,7 @@ contract OperatorDelegator is
     }
 
     /**
-     * @notice Users should NOT send ETH directly to this contract unless they want to donate to existing ezETH holders.
+     * @notice Users should NOT send ETH directly to this contract unless they want to donate to existing airETH holders.
      *        This is an internal protocol function.
      * @dev Handle ETH sent to this contract - will get forwarded to the deposit queue for restaking as a protocol reward
      * @dev If msg.sender is eigenPod then forward ETH to deposit queue without taking cut (i.e. full withdrawal from beacon chain)
