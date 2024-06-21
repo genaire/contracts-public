@@ -7,23 +7,23 @@ import {
 } from "@chainlink/contracts-ccip/src/v0.8/ccip/applications/CCIPReceiver.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { IxRenzoDeposit } from "../IxRenzoDeposit.sol";
+import { IxGenaireDeposit } from "../IxGenaireDeposit.sol";
 import "../../../Errors/Errors.sol";
 
 /// @title CCIPReceiver - Base contract for CCIP applications that can receive messages.
 contract Receiver is CCIPReceiver, Ownable, Pausable {
-    /// @notice The Address of xRenzoBridge contract on L1
-    address public xRenzoBridgeL1;
+    /// @notice The Address of xGenaireBridge contract on L1
+    address public xGenaireBridgeL1;
 
     /// @notice The chainlink source chain selector id for Ethereum
     uint64 public ccipEthChainSelector;
 
-    /// @notice xRenzoDeposit Contract on L2
-    IxRenzoDeposit public xRenzoDeposit;
+    /// @notice xGenaireDeposit Contract on L2
+    IxGenaireDeposit public xGenaireDeposit;
 
-    event XRenzoBridgeL1Updated(address newBridgeAddress, address oldBridgeAddress);
+    event XGenaireBridgeL1Updated(address newBridgeAddress, address oldBridgeAddress);
     event CCIPEthChainSelectorUpdated(uint64 newSourceChainSelector, uint64 oldSourceChainSelector);
-    event XRenzoDepositUpdated(address newRenzoDeposit, address oldRenzoDeposit);
+    event XGenaireDepositUpdated(address newGenaireDeposit, address oldGenaireDeposit);
     /**
      *  @dev Event emitted when a message is received from another chain
      *  @param messageId  The unique ID of the message
@@ -42,18 +42,18 @@ contract Receiver is CCIPReceiver, Ownable, Pausable {
 
     constructor(
         address _router,
-        address _xRenzoBridgeL1,
+        address _xGenaireBridgeL1,
         uint64 _ccipEthChainSelector
     ) CCIPReceiver(_router) {
-        if (_xRenzoBridgeL1 == address(0) || _ccipEthChainSelector == 0) revert InvalidZeroInput();
+        if (_xGenaireBridgeL1 == address(0) || _ccipEthChainSelector == 0) revert InvalidZeroInput();
 
-        // Set xRenzoBridge L1 contract address
-        xRenzoBridgeL1 = _xRenzoBridgeL1;
+        // Set xGenaireBridge L1 contract address
+        xGenaireBridgeL1 = _xGenaireBridgeL1;
 
         // Set ccip source chain selector for Ethereum L1
         ccipEthChainSelector = _ccipEthChainSelector;
 
-        // Pause The contract to setup xRenzoDeposit
+        // Pause The contract to setup xGenaireDeposit
         _pause();
     }
 
@@ -69,12 +69,12 @@ contract Receiver is CCIPReceiver, Ownable, Pausable {
         address _ccipSender = abi.decode(any2EvmMessage.sender, (address));
         uint64 _ccipSourceChainSelector = any2EvmMessage.sourceChainSelector;
         // Verify origin on the price feed
-        if (_ccipSender != xRenzoBridgeL1) revert InvalidSender(xRenzoBridgeL1, _ccipSender);
+        if (_ccipSender != xGenaireBridgeL1) revert InvalidSender(xGenaireBridgeL1, _ccipSender);
         // Verify Source chain of the message
         if (_ccipSourceChainSelector != ccipEthChainSelector)
             revert InvalidSourceChain(ccipEthChainSelector, _ccipSourceChainSelector);
         (uint256 _price, uint256 _timestamp) = abi.decode(any2EvmMessage.data, (uint256, uint256));
-        xRenzoDeposit.updatePrice(_price, _timestamp);
+        xGenaireDeposit.updatePrice(_price, _timestamp);
         emit MessageReceived(
             any2EvmMessage.messageId,
             _ccipSourceChainSelector,
@@ -89,14 +89,14 @@ contract Receiver is CCIPReceiver, Ownable, Pausable {
      *****************************/
 
     /**
-     * @notice This function updates the xRenzoBridge Contract address deployed on Ethereum L1
+     * @notice This function updates the xGenaireBridge Contract address deployed on Ethereum L1
      * @dev This should be a permissioned call (onlyOnwer)
-     * @param _newXRenzoBridgeL1 New address of xRenzoBridge Contract
+     * @param _newXGenaireBridgeL1 New address of xGenaireBridge Contract
      */
-    function updateXRenzoBridgeL1(address _newXRenzoBridgeL1) external onlyOwner {
-        if (_newXRenzoBridgeL1 == address(0)) revert InvalidZeroInput();
-        emit XRenzoBridgeL1Updated(_newXRenzoBridgeL1, xRenzoBridgeL1);
-        xRenzoBridgeL1 = _newXRenzoBridgeL1;
+    function updateXGenaireBridgeL1(address _newXGenaireBridgeL1) external onlyOwner {
+        if (_newXGenaireBridgeL1 == address(0)) revert InvalidZeroInput();
+        emit XGenaireBridgeL1Updated(_newXGenaireBridgeL1, xGenaireBridgeL1);
+        xGenaireBridgeL1 = _newXGenaireBridgeL1;
     }
 
     /**
@@ -127,13 +127,13 @@ contract Receiver is CCIPReceiver, Ownable, Pausable {
     }
 
     /**
-     * @notice This function updates the xRenzoDeposit Contract address
+     * @notice This function updates the xGenaireDeposit Contract address
      * @dev This should be a permissioned call (onlyOnwer)
-     * @param _newXRenzoDeposit New xRenzoDeposit Contract address
+     * @param _newXGenaireDeposit New xGenaireDeposit Contract address
      */
-    function setRenzoDeposit(address _newXRenzoDeposit) external onlyOwner {
-        if (_newXRenzoDeposit == address(0)) revert InvalidZeroInput();
-        emit XRenzoDepositUpdated(_newXRenzoDeposit, address(xRenzoDeposit));
-        xRenzoDeposit = IxRenzoDeposit(_newXRenzoDeposit);
+    function setGenaireDeposit(address _newXGenaireDeposit) external onlyOwner {
+        if (_newXGenaireDeposit == address(0)) revert InvalidZeroInput();
+        emit XGenaireDepositUpdated(_newXGenaireDeposit, address(xGenaireDeposit));
+        xGenaireDeposit = IxGenaireDeposit(_newXGenaireDeposit);
     }
 }
