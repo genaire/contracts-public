@@ -2,7 +2,7 @@
 pragma solidity 0.8.19;
 
 import "../Permissions/IRoleManager.sol";
-import "../Oracle/IRenzoOracle.sol";
+import "../Oracle/IGenaireOracle.sol";
 import "../IRestakeManager.sol";
 import "../token/IAirEthToken.sol";
 
@@ -22,8 +22,8 @@ abstract contract WithdrawQueueStorageV1 {
         uint256 createdAt;
     }
 
-    /// @dev reference to the RenzoOracle contract
-    IRenzoOracle public renzoOracle;
+    /// @dev reference to the GenaireOracle contract
+    IGenaireOracle public genaireOracle;
 
     /// @dev reference to the airETH token contract
     IAirEthToken public airETH;
