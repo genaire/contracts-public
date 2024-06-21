@@ -155,7 +155,7 @@ contract DepositQueue is Initializable, ReentrancyGuardUpgradeable, DepositQueue
     /// @dev Handle ETH sent to this contract from outside the protocol - e.g. rewards
     /// ETH will be stored here until used for a validator deposit
     /// This should receive ETH from scenarios like Execution Layer Rewards and MEV from native staking
-    /// Users should NOT send ETH directly to this contract unless they want to donate to existing ezETH holders
+    /// Users should NOT send ETH directly to this contract unless they want to donate to existing airETH holders
     /// Checks the ETH withdraw Queue and fills up if required
     receive() external payable nonReentrant {
         uint256 feeAmount = 0;
