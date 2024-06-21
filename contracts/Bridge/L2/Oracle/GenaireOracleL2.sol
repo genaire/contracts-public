@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-import "./RenzoOracleL2Storage.sol";
+import "./GenaireOracleL2Storage.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {
     OwnableUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../../../Errors/Errors.sol";
 
-contract RenzoOracleL2 is Initializable, OwnableUpgradeable, RenzoOracleL2StorageV1 {
+contract GenaireOracleL2 is Initializable, OwnableUpgradeable, GenaireOracleL2StorageV1 {
     /// @dev The maxmimum staleness allowed for a price feed from chainlink
     uint256 public constant MAX_TIME_WINDOW = 86400 + 60; // 24 hours + 60 seconds
 
@@ -44,7 +44,7 @@ contract RenzoOracleL2 is Initializable, OwnableUpgradeable, RenzoOracleL2Storag
     }
 
     /**
-     * @notice Pulls the price of ezETH
+     * @notice Pulls the price of airETH
      * @dev reverts if price is less than 1 Ether
      */
     function getMintRate() public view returns (uint256, uint256) {
