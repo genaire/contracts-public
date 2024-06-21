@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.19;
 
-interface IxRenzoDeposit {
+interface IxGenaireDeposit {
     function deposit(
         uint256 _amountIn,
         uint256 _minOut,
