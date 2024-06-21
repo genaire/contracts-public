@@ -3,18 +3,18 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "../Permissions/IRoleManager.sol";
-import "./RenzoOracleStorage.sol";
-import "./IRenzoOracle.sol";
+import "./GenaireOracleStorage.sol";
+import "./IGenaireOracle.sol";
 import "../Errors/Errors.sol";
 
 /// @dev This contract will be responsible for looking up values via Chainlink
 /// Data retrieved will be verified for liveness via a max age on the oracle lookup.
 /// All tokens should be denominated in the same base currency and contain the same decimals on the price lookup.
-contract RenzoOracle is
-    IRenzoOracle,
+contract GenaireOracle is
+    IGenaireOracle,
     Initializable,
     ReentrancyGuardUpgradeable,
-    RenzoOracleStorageV1
+    GenaireOracleStorageV1
 {
     /// @dev Error for invalid 0x0 address
     string constant INVALID_0_INPUT = "Invalid 0 input";
@@ -118,21 +118,21 @@ contract RenzoOracle is
         return totalValue;
     }
 
-    /// @dev Given amount of current protocol value, new value being added, and supply of ezETH, determine amount to mint
+    /// @dev Given amount of current protocol value, new value being added, and supply of airETH, determine amount to mint
     /// Values should be denominated in the same underlying currency with the same decimal precision
     function calculateMintAmount(
         uint256 _currentValueInProtocol,
         uint256 _newValueAdded,
-        uint256 _existingEzETHSupply
+        uint256 _existingAirETHSupply
     ) external pure returns (uint256) {
         // For first mint, just return the new value added.
         // Checking both current value and existing supply to guard against gaming the initial mint
-        if (_currentValueInProtocol == 0 || _existingEzETHSupply == 0) {
+        if (_currentValueInProtocol == 0 || _existingAirETHSupply == 0) {
             return _newValueAdded; // value is priced in base units, so divide by scale factor
         }
 
-        // Calculate the mintAmount by current exchangeRate of ezETH priced in ETH
-        uint256 mintAmount = (_existingEzETHSupply * _newValueAdded) / _currentValueInProtocol;
+        // Calculate the mintAmount by current exchangeRate of airETH priced in ETH
+        uint256 mintAmount = (_existingAirETHSupply * _newValueAdded) / _currentValueInProtocol;
 
         // Sanity check
         if (mintAmount == 0) revert InvalidTokenAmount();
@@ -140,14 +140,14 @@ contract RenzoOracle is
         return mintAmount;
     }
 
-    // Given the amount of ezETH to burn, the supply of ezETH, and the total value in the protocol, determine amount of value to return to user
+    // Given the amount of airETH to burn, the supply of airETH, and the total value in the protocol, determine amount of value to return to user
     function calculateRedeemAmount(
-        uint256 _ezETHBeingBurned,
-        uint256 _existingEzETHSupply,
+        uint256 _airETHBeingBurned,
+        uint256 _existingAirETHSupply,
         uint256 _currentValueInProtocol
     ) external pure returns (uint256) {
-        // This is just returning the percentage of TVL that matches the percentage of ezETH being burned
-        uint256 redeemAmount = (_currentValueInProtocol * _ezETHBeingBurned) / _existingEzETHSupply;
+        // This is just returning the percentage of TVL that matches the percentage of airETH being burned
+        uint256 redeemAmount = (_currentValueInProtocol * _airETHBeingBurned) / _existingAirETHSupply;
 
         // Sanity check
         if (redeemAmount == 0) revert InvalidTokenAmount();
