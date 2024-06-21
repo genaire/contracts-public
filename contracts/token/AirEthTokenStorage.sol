@@ -2,12 +2,12 @@
 pragma solidity 0.8.19;
 import "../Permissions/IRoleManager.sol";
 
-/// @title EzEthTokenStorage
+/// @title AirEthTokenStorage
 /// @dev This contract will hold all local variables for the  Contract
 /// When upgrading the protocol, inherit from this contract on the V2 version and change the
 /// StorageManager to inherit from the later version.  This ensures there are no storage layout
 /// corruptions when upgrading.
-contract EzEthTokenStorageV1 {
+contract AirEthTokenStorageV1 {
     /// @dev reference to the RoleManager contract
     IRoleManager public roleManager;
 
@@ -19,7 +19,7 @@ contract EzEthTokenStorageV1 {
 /// On the next version of the protocol, if new variables are added, put them in the below
 /// contract and use this as the inheritance chain.
 /**
-contract EzEthTokenStorageV2 is EzEthTokenStorageV1 {
+contract AirEthTokenStorageV2 is AirEthTokenStorageV1 {
   address newVariable;
 }
  */
