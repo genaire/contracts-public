@@ -120,7 +120,7 @@ interface IConnext {
 
     function approvedAssets(TokenId calldata _canonical) external view returns (bool);
 
-    // ============ Functions added to the min interface by Renzo ==============
+    // ============ Functions added to the min interface by Genaire ==============
 
     // used by the smart contract to swap tokens
     function swapExact(
