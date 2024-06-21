@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "../Errors/Errors.sol";
 
 /**
- * @author  Renzo Protocol
+ * @author  Genaire Protocol
  * @title   RewardHandler
  * @dev     Handles native ETH rewards deposited on the execution layer from validator nodes.  Forwards them
  * to the DepositQueue contract for restaking.
