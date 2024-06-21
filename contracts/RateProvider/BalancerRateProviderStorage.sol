@@ -8,6 +8,6 @@ abstract contract BalancerRateProviderStorageV1 {
     /// @dev reference to the RestakeManager contract
     IRestakeManager public restakeManager;
 
-    /// @dev reference to the ezETH token contract
-    IERC20Upgradeable public ezETHToken;
+    /// @dev reference to the airETH token contract
+    IERC20Upgradeable public airETHToken;
 }
