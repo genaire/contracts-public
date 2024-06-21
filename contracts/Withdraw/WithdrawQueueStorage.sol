@@ -4,7 +4,7 @@ pragma solidity 0.8.19;
 import "../Permissions/IRoleManager.sol";
 import "../Oracle/IRenzoOracle.sol";
 import "../IRestakeManager.sol";
-import "../token/IEzEthToken.sol";
+import "../token/IAirEthToken.sol";
 
 abstract contract WithdrawQueueStorageV1 {
     address public constant IS_NATIVE = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -18,15 +18,15 @@ abstract contract WithdrawQueueStorageV1 {
         address collateralToken;
         uint256 withdrawRequestID;
         uint256 amountToRedeem;
-        uint256 ezETHLocked;
+        uint256 airETHLocked;
         uint256 createdAt;
     }
 
     /// @dev reference to the RenzoOracle contract
     IRenzoOracle public renzoOracle;
 
-    /// @dev reference to the ezETH token contract
-    IEzEthToken public ezETH;
+    /// @dev reference to the airETH token contract
+    IAirEthToken public airETH;
 
     /// @dev reference to the RoleManager contract
     IRoleManager public roleManager;
