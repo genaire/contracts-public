@@ -4,25 +4,25 @@ pragma solidity 0.8.19;
 import { IXReceiver } from "@connext/interfaces/core/IXReceiver.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-import { IxRenzoDeposit } from "../IxRenzoDeposit.sol";
+import { IxGenaireDeposit } from "../IxGenaireDeposit.sol";
 import "../../../Errors/Errors.sol";
 
 contract ConnextReceiver is IXReceiver, Ownable, Pausable {
     /// @notice The address of connext Bridge
     address public connext;
 
-    /// @notice The Address of xRenzoBridge contract on L1
-    address public xRenzoBridgeL1;
+    /// @notice The Address of xGenaireBridge contract on L1
+    address public xGenaireBridgeL1;
 
     /// @notice The connext source chain domain id for Ethereum
     uint32 public connextEthChainDomain;
 
-    /// @notice xRenzoDeposit Contract on L2
-    IxRenzoDeposit public xRenzoDeposit;
+    /// @notice xGenaireDeposit Contract on L2
+    IxGenaireDeposit public xGenaireDeposit;
 
-    event XRenzoBridgeL1Updated(address newBridgeAddress, address oldBridgeAddress);
+    event XGenaireBridgeL1Updated(address newBridgeAddress, address oldBridgeAddress);
     event ConnextEthChainDomainUpdated(uint32 newSourceChainDomain, uint32 oldSourceChainDomain);
-    event XRenzoDepositUpdated(address newRenzoDeposit, address oldRenzoDeposit);
+    event XGenaireDepositUpdated(address newGenaireDeposit, address oldGenaireDeposit);
 
     /**
      *  @dev Event emitted when a message is received from another chain
@@ -42,27 +42,27 @@ contract ConnextReceiver is IXReceiver, Ownable, Pausable {
 
     modifier onlySource(address _originSender, uint32 _origin) {
         if (
-            _originSender != xRenzoBridgeL1 ||
+            _originSender != xGenaireBridgeL1 ||
             _origin != connextEthChainDomain ||
             msg.sender != connext
         ) revert UnAuthorisedCall();
         _;
     }
 
-    constructor(address _connext, address _xRenzoBridgeL1, uint32 _connextEthChainDomain) {
-        if (_xRenzoBridgeL1 == address(0) || _connextEthChainDomain == 0 || _connext == address(0))
+    constructor(address _connext, address _xGenaireBridgeL1, uint32 _connextEthChainDomain) {
+        if (_xGenaireBridgeL1 == address(0) || _connextEthChainDomain == 0 || _connext == address(0))
             revert InvalidZeroInput();
 
         // Set connext bridge address
         connext = _connext;
 
-        // Set xRenzoBridge L1 contract address
-        xRenzoBridgeL1 = _xRenzoBridgeL1;
+        // Set xGenaireBridge L1 contract address
+        xGenaireBridgeL1 = _xGenaireBridgeL1;
 
         // Set connext source chain Domain Id for Ethereum L1
         connextEthChainDomain = _connextEthChainDomain;
 
-        // Pause The contract to setup xRenzoDeposit
+        // Pause The contract to setup xGenaireDeposit
         _pause();
     }
 
@@ -75,7 +75,7 @@ contract ConnextReceiver is IXReceiver, Ownable, Pausable {
         bytes memory _callData
     ) external onlySource(_originSender, _origin) whenNotPaused returns (bytes memory) {
         (uint256 _price, uint256 _timestamp) = abi.decode(_callData, (uint256, uint256));
-        xRenzoDeposit.updatePrice(_price, _timestamp);
+        xGenaireDeposit.updatePrice(_price, _timestamp);
 
         emit MessageReceived(_transferId, _origin, _originSender, _price, _timestamp);
     }
@@ -85,14 +85,14 @@ contract ConnextReceiver is IXReceiver, Ownable, Pausable {
      *****************************/
 
     /**
-     * @notice This function updates the xRenzoBridge Contract address deployed on Ethereum L1
+     * @notice This function updates the xGenaireBridge Contract address deployed on Ethereum L1
      * @dev This should be a permissioned call (onlyOnwer)
-     * @param _newXRenzoBridgeL1 New address of xRenzoBridge Contract
+     * @param _newXGenaireBridgeL1 New address of xGenaireBridge Contract
      */
-    function updateXRenzoBridgeL1(address _newXRenzoBridgeL1) external onlyOwner {
-        if (_newXRenzoBridgeL1 == address(0)) revert InvalidZeroInput();
-        emit XRenzoBridgeL1Updated(_newXRenzoBridgeL1, xRenzoBridgeL1);
-        xRenzoBridgeL1 = _newXRenzoBridgeL1;
+    function updateXGenaireBridgeL1(address _newXGenaireBridgeL1) external onlyOwner {
+        if (_newXGenaireBridgeL1 == address(0)) revert InvalidZeroInput();
+        emit XGenaireBridgeL1Updated(_newXGenaireBridgeL1, xGenaireBridgeL1);
+        xGenaireBridgeL1 = _newXGenaireBridgeL1;
     }
 
     /**
@@ -123,13 +123,13 @@ contract ConnextReceiver is IXReceiver, Ownable, Pausable {
     }
 
     /**
-     * @notice This function updates the xRenzoDeposit Contract address
+     * @notice This function updates the xGenaireDeposit Contract address
      * @dev This should be a permissioned call (onlyOnwer)
-     * @param _newXRenzoDeposit New xRenzoDeposit Contract address
+     * @param _newXGenaireDeposit New xGenaireDeposit Contract address
      */
-    function setRenzoDeposit(address _newXRenzoDeposit) external onlyOwner {
-        if (_newXRenzoDeposit == address(0)) revert InvalidZeroInput();
-        emit XRenzoDepositUpdated(_newXRenzoDeposit, address(xRenzoDeposit));
-        xRenzoDeposit = IxRenzoDeposit(_newXRenzoDeposit);
+    function setGenaireDeposit(address _newXGenaireDeposit) external onlyOwner {
+        if (_newXGenaireDeposit == address(0)) revert InvalidZeroInput();
+        emit XGenaireDepositUpdated(_newXGenaireDeposit, address(xGenaireDeposit));
+        xGenaireDeposit = IxGenaireDeposit(_newXGenaireDeposit);
     }
 }
