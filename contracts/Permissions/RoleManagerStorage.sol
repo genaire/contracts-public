@@ -7,7 +7,7 @@ pragma solidity 0.8.19;
 /// StorageManager to inherit from the later version.  This ensures there are no storage layout
 /// corruptions when upgrading.
 contract RoleManagerStorageV1 {
-    /// @dev role for granting capability to mint/burn ezETH
+    /// @dev role for granting capability to mint/burn airETH
     bytes32 public constant RX_ETH_MINTER_BURNER = keccak256("RX_ETH_MINTER_BURNER");
 
     /// @dev role for granting capability to update config on the OperatorDelgator Contracts
@@ -35,10 +35,10 @@ contract RoleManagerStorageV1 {
 /// On the next version of the protocol, if new variables are added, put them in the below
 /// contract and use this as the inheritance chain.
 contract RoleManagerStorageV2 is RoleManagerStorageV1 {
-    /// @dev role for granting capability to update whitelisted origin in xRenzoBridge
+    /// @dev role for granting capability to update whitelisted origin in xGenaireBridge
     bytes32 public constant BRIDGE_ADMIN = keccak256("BRIDGE_ADMIN");
 
-    /// @dev role to granting capability to send price feed of ezETH to L2
+    /// @dev role to granting capability to send price feed of airETH to L2
     bytes32 public constant PRICE_FEED_SENDER = keccak256("PRICE_FEED_SENDER");
 }
 
